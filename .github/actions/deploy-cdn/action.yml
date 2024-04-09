@@ -85,7 +85,6 @@ runs:
           && chmod 600 id_rsa known_hosts
           && ssh -i ./id_rsa -o UserKnownHostsFile=./known_hosts"
       run: |
-        terraform version | head -1
         terraform init -reconfigure -upgrade -backend-config=backend-${{ inputs.ENVIRONMENT }}.conf
 
     - name: Terraform validate
