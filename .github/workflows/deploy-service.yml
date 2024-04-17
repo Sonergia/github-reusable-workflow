@@ -536,6 +536,7 @@ jobs:
       - name: Notify teams channel
         if: always() && inputs.NOTIFICATIONS_TEAMS == 'true'
         uses: sonergia/github-reusable-workflows/.github/actions/ms-teams-notification@2.x
+        continue-on-error: true
         with:
           MS_TEAMS_WEBHOOK_URI: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
           ENVIRONMENT: ${{ inputs.CLUSTER }}
