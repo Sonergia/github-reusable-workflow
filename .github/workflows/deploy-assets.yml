@@ -104,6 +104,7 @@ jobs:
       - id: notify-workflow-start
         if: always() && steps.set-var-default.outputs.NOTIFICATIONS_TEAMS == 'true'
         uses: Sonergia/github-reusable-workflows/.github/actions/ms-teams-notification@2.x
+        continue-on-error: true
         with:
           MS_TEAMS_WEBHOOK_URI: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
           ENVIRONMENT: ${{ steps.check-context.outputs.ENVIRONMENT }}
@@ -316,6 +317,7 @@ jobs:
       - name: Notify teams channel
         if: always() && needs.prerequisites.outputs.NOTIFICATIONS_TEAMS == 'true'
         uses: sonergia/github-reusable-workflows/.github/actions/ms-teams-notification@2.x
+        continue-on-error: true
         with:
           MS_TEAMS_WEBHOOK_URI: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
           ENVIRONMENT: ${{ needs.prerequisites.outputs.ENVIRONMENT }}
