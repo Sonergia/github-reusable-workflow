@@ -3,10 +3,10 @@ name: Force cancelation of running workflow
 on:
   workflow_call:
     inputs:
-        TARGET_WORKFLOW:
-        description: 'ID of the workflow to cancel'
-        required: true
-        type: string
+      TARGET_WORKFLOW:
+      description: 'ID of the workflow to cancel'
+      required: true
+      type: string
 
 jobs:
   cancel_workflow:
