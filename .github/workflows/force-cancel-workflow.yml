@@ -4,12 +4,12 @@ on:
   workflow_call:
     inputs:
       TARGET_WORKFLOW:
-      description: 'ID of the workflow to cancel'
       required: true
       type: string
 
 jobs:
-  cancel_workflow:
+  cancel-workflow:
+    name: Cancel Workflow Run
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Workflow Run
