@@ -1,0 +1,21 @@
+name: Force cancelation of running workflow
+
+on:
+  workflow_call:
+    inputs:
+      TARGET_WORKFLOW:
+      required: true
+      type: string
+
+jobs:
+  cancel-workflow:
+    name: Cancel Workflow Run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Workflow Run
+        run: |
+          curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ inputs.TARGET_WORKFLOW }}/force-cancel
