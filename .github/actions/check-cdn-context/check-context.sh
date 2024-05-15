@@ -11,6 +11,7 @@ function getJiraCodeFromBranch {
     # PR_NUMBER=$(echo ${GITHUB_REF} | awk 'BEGIN { FS = "/" } ; { print $3 }')
 
     # Check if source branch is project or epic
+    #FIXME: The short ref name of the branch or tag that triggered the workflow run
     if [[ ${GITHUB_REF_NAME} =~ ^(project|epic)/.*$ ]]; then
         # Extract JIRA codes from branch pattern (ex: project/MAESTRO-1186/feature/MAESTRO-1151)
         JIRA_CODE=$(echo "${GITHUB_REF_NAME}" | awk 'BEGIN { FS = "/" } ; { print $4 }')

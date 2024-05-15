@@ -5,6 +5,9 @@ inputs:
   ENVIRONMENT:
     description: 'ENVIRONMENT/environment to deploy to'
     required: true
+  SERVICE_VERSION_NAME:
+    description: 'The optional specific version of the service'
+    required: false
   SERVICE_NAME:
     description: 'The name of the service'
     required: true
@@ -61,6 +64,16 @@ runs:
   steps:
     - uses: actions/checkout@v3
 
+    - name: Determine DNS_PUBLIC_ZONE_PREFIX
+      shell: bash
+      id: dns-public-zone-prefix
+      run: |
+        if [ -z "${{ inputs.SERVICE_VERSION_NAME }}" ]; then
+          echo "DNS_PUBLIC_ZONE_PREFIX=${{ inputs.SERVICE_NAME }}.${{ inputs.ENVIRONMENT }}" >> $GITHUB_OUTPUT
+        else
+          echo "DNS_PUBLIC_ZONE_PREFIX=${{ inputs.SERVICE_NAME }}.${{ inputs.SERVICE_VERSION_NAME }}" >> $GITHUB_OUTPUT
+        fi
+
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -85,7 +98,14 @@ runs:
           && chmod 600 id_rsa known_hosts
           && ssh -i ./id_rsa -o UserKnownHostsFile=./known_hosts"
       run: |
-        terraform init -reconfigure -upgrade -backend-config=backend-${{ inputs.ENVIRONMENT }}.conf
+        if [ -z "${{ inputs.SERVICE_VERSION_NAME }}" ]; then
+          BACKEND_KEY="assets/${{ inputs.SERVICE_NAME }}/${{ inputs.ENVIRONMENT }}/terraform.tfstate"
+        else
+          BACKEND_KEY="assets/${{ inputs.SERVICE_NAME }}/${{ inputs.ENVIRONMENT }}/version/${{ inputs.SERVICE_VERSION_NAME }}/terraform.tfstate"
+        fi
+        terraform init -reconfigure -upgrade \
+          -backend-config="region=${{ inputs.AWS_DEFAULT_REGION }}" \
+          -backend-config="key=${BACKEND_KEY}"
 
     - name: Terraform validate
       id: tf-validate
@@ -105,7 +125,8 @@ runs:
         terraform apply -auto-approve \
           -var-file=terraform-${{ inputs.ENVIRONMENT }}.tfvars \
           -var="tag_name=${{ inputs.TAG_NAME }}" \
-          -var="sha_short=${{ inputs.SHA_SHORT }}"
+          -var="sha_short=${{ inputs.SHA_SHORT }}" \
+          -var="public_dns_zone_prefix=${{ steps.dns-public-zone-prefix.outputs.DNS_PUBLIC_ZONE_PREFIX }}"
 
     - name: Terraform Output
       id: tf-output

@@ -22,8 +22,6 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - uses: actions/checkout@v3
-
     # Get commit SHA before checking out reusable workflows
     - name: Git output SHA short
       shell: bash

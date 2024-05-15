@@ -37,6 +37,15 @@ on:
         description: 'Namespace of the service to deploy'
         required: true
         type: string
+      SERVICE_VERSION_NAME:
+        description: 'The optional specific branch of the service'
+        required: false
+        type: string
+        default: ''
+      SERVICE_VERSION_REF:
+        description: 'The ref to deploy'
+        required: true
+        type: string
       TF_WORKING_DIRECTORY:
         description: 'Terraform working directory'
         required: false
@@ -64,15 +73,19 @@ jobs:
       COMMIT_MESSAGE: ${{ steps.git-commit.outputs.COMMIT_MESSAGE }}
       DATADOG_URL: ${{ steps.output-datadog-url.outputs.DATADOG_URL }}
       ENVIRONMENT: ${{ steps.check-context.outputs.ENVIRONMENT }}
-      JIRA_CODE: ${{ steps.check-context.outputs.JIRA_CODE }}
+      # if provided, inputs.SERVICE_VERSION_NAME overrides steps.check-context.outputs.JIRA_CODE (determined by GITHUB_REF_NAME in check-cdn-context)
+      JIRA_CODE: ${{ inputs.SERVICE_VERSION_NAME || steps.check-context.outputs.JIRA_CODE }}
       NOTIFICATIONS_JIRA: ${{ steps.set-var-default.outputs.NOTIFICATIONS_JIRA }}
       NOTIFICATIONS_TEAMS: ${{ steps.set-var-default.outputs.NOTIFICATIONS_TEAMS }}
       SHA_SHORT: ${{ steps.check-context.outputs.SHA_SHORT }}
-      TAG_NAME: ${{ steps.check-context.outputs.TAG_NAME }}
+      # if provided, inputs.SERVICE_VERSION_NAME overrides steps.check-context.outputs.TAG_NAME (determined by GITHUB_REF_NAME in check-cdn-context)
+      TAG_NAME: ${{ inputs.SERVICE_VERSION_NAME || steps.check-context.outputs.TAG_NAME }}
     env:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.SERVICE_VERSION_REF }}
 
       - name: Set env var as output to pass it to reusable workflows with 'needs'
         id: set-var-default
@@ -86,7 +99,7 @@ jobs:
           echo "NOTIFICATIONS_TEAMS=${NOTIFICATIONS_TEAMS:-"true"}" >> ${GITHUB_OUTPUT}
 
       - id: check-context
-        uses: Sonergia/github-reusable-workflows/.github/actions/check-cdn-context@2.x
+        uses: Sonergia/github-reusable-workflows/.github/actions/check-cdn-context@3.x
         with:
           ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
 
@@ -127,11 +140,11 @@ jobs:
           echo "| COMMIT_MESSAGE | \`${{ steps.git-commit.outputs.COMMIT_MESSAGE }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| DATADOG_URL | [Link](${{ steps.output-datadog-url.outputs.DATADOG_URL }}) |" >> $GITHUB_STEP_SUMMARY
           echo "| ENVIRONMENT | \`${{ steps.check-context.outputs.ENVIRONMENT }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| JIRA_CODE | \`${{ steps.check-context.outputs.JIRA_CODE }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| JIRA_CODE | \`${{ inputs.SERVICE_VERSION_NAME || steps.check-context.outputs.JIRA_CODE }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| NOTIFICATIONS_JIRA | \`${{ steps.set-var-default.outputs.NOTIFICATIONS_JIRA }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| NOTIFICATIONS_TEAMS | \`${{ steps.set-var-default.outputs.NOTIFICATIONS_TEAMS }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| SHA_SHORT | \`${{ steps.check-context.outputs.SHA_SHORT }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| TAG_NAME | \`${{ steps.check-context.outputs.TAG_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| TAG_NAME | \`${{ inputs.SERVICE_VERSION_NAME || steps.check-context.outputs.TAG_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
 
   build-assets:
     runs-on: ubuntu-latest
@@ -146,10 +159,12 @@ jobs:
       ARCHIVE_FILENAME: ${{ steps.build-node-app.outputs.ARCHIVE_FILENAME }}
       BUILD_DIRECTORY: ${{ steps.build-node-app.outputs.BUILD_DIRECTORY }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.SERVICE_VERSION_REF }}
 
       - id: build-node-app
-        uses: sonergia/github-reusable-workflows/.github/actions/build-node-app@2.x
+        uses: sonergia/github-reusable-workflows/.github/actions/build-node-app@3.x
         with:
           ARTIFACT_NAME: build-${{ needs.prerequisites.outputs.SHA_SHORT }}
           BUILD_DIRECTORY: ${{ inputs.BUILD_DIRECTORY }}
@@ -169,10 +184,12 @@ jobs:
       DOMAIN_NAMES: ${{ steps.deploy-cdn.outputs.DOMAIN_NAMES }}
       PUBLIC_URL: ${{ steps.output-public-url.outputs.PUBLIC_URL }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.SERVICE_VERSION_REF }}
 
       - id: deploy-cdn
-        uses: sonergia/github-reusable-workflows/.github/actions/deploy-cdn@2.x
+        uses: sonergia/github-reusable-workflows/.github/actions/deploy-cdn@3.x
         with:
           AWS_ACCESS_KEY_ID_TF: ${{ secrets.AWS_ACCESS_KEY_ID_TF }}
           AWS_DEFAULT_REGION: ${{ inputs.AWS_DEFAULT_REGION }}
@@ -180,6 +197,7 @@ jobs:
           GH_TF_SSH_KEY: ${{ secrets.GH_TF_SSH_KEY }}
           SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
           SERVICE_NAMESPACE: ${{ inputs.SERVICE_NAMESPACE }}
+          SERVICE_VERSION_NAME: ${{ inputs.SERVICE_VERSION_NAME }}
           TF_WORKING_DIRECTORY: ${{ inputs.TF_WORKING_DIRECTORY }}
           TAG_NAME: ${{ needs.prerequisites.outputs.TAG_NAME }}
           SHA_SHORT: ${{ needs.prerequisites.outputs.SHA_SHORT }}
@@ -201,10 +219,9 @@ jobs:
       - build-assets
       - deploy-cdn
     steps:
-      - uses: actions/checkout@v3
 
       # Get & untar assets
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: ${{ needs.build-assets.outputs.ARTIFACT_NAME }}
 
