@@ -296,6 +296,7 @@ jobs:
         with:
           CLUSTER: ${{ inputs.CLUSTER }}
           SERVICE: ${{ matrix.service }}
+
       #--------------------------------------------------------
 
       # Formerly deploy-status workflow that had to be merge to match matrix outputs
@@ -312,18 +313,6 @@ jobs:
           fi
           echo "DEPLOY_STATUS=${DEPLOY_STATUS}" >> ${GITHUB_OUTPUT}
 
-      - name: Retrieve and display logs if deployment fails
-        if: steps.check-deploy-status.outputs.DEPLOY_STATUS == 'failure'
-        run: |
-          LOG_GROUP_NAME="/ecs/${{ inputs.CLUSTER }}/${{ inputs.SERVICE_NAMESPACE }}/${{ matrix.service }}"
-          LOG_GROUP_EXISTS=$(aws logs describe-log-groups --log-group-name-prefix $LOG_GROUP_NAME --query 'logGroups[?logGroupName==`'$LOG_GROUP_NAME'`]' --output text)
-          if [ -z "$LOG_GROUP_EXISTS" ]; then
-            echo "Log group $LOG_GROUP_NAME does not exist."
-          else
-            echo "Log group $LOG_GROUP_NAME exists. Tailing logs..."
-            aws logs tail $LOG_GROUP_NAME --since 15m
-          fi
-      
       - name: Map vars with github environment
         id: map-github-env
         if: always()

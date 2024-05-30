@@ -4,8 +4,8 @@ on:
   workflow_call:
     inputs:
       TARGET_WORKFLOW:
-        required: true
-        type: string
+      required: true
+      type: string
 
 jobs:
   cancel-workflow:

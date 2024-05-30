@@ -113,7 +113,6 @@ else
 
         ROLLOUT_STATE_REASON=$(echo "${SERVICE_DEPLOYMENT_FAILED}" | jq --raw-output ".rolloutStateReason")
         echo "::error title=Monitor deployment::${SERVICE}: Deployment failed, rolloutStateReason: ${ROLLOUT_STATE_REASON}"
-        echo "::set-output name=deploy_status::failure"
     fi
 fi
 
