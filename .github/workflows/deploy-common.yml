@@ -24,7 +24,7 @@ concurrency:
 jobs:
   tf-common:
     name: Tf common on cluster '${{ inputs.CLUSTER }}'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 10
 
     steps:
