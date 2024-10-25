@@ -10,7 +10,7 @@ on:
 jobs:
   cancel-workflow:
     name: Cancel Workflow Run
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Cancel Workflow Run
         run: |
