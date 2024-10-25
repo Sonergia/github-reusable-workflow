@@ -58,7 +58,7 @@ concurrency:
 jobs:
   tf-lambda:
     name: Tf '${{ matrix.lambda }}' on environment '${{ inputs.ENVIRONMENT }}'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
 
     # For deployment-action and checkout

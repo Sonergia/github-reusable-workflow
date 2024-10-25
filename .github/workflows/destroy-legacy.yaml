@@ -57,7 +57,7 @@ env:
 
 jobs:
   prerequisites:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       COMMIT_MESSAGE: ${{ steps.git-commit.outputs.COMMIT_MESSAGE }}
       JIRA_CODE: ${{ steps.get-jira-code-from-branch.outputs.JIRA_CODE }}
@@ -83,7 +83,7 @@ jobs:
           BRANCH: ${{ github.event.pull_request.head.ref }}
 
   notify-start-destroy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: prerequisites
     if: always() && inputs.NOTIFICATIONS_TEAMS == 'true'
     steps:
@@ -126,7 +126,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY_TF: ${{ secrets.AWS_SECRET_ACCESS_KEY_TF }}
 
   notify-end-destroy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [prerequisites, destroy]
     if: always() && inputs.NOTIFICATIONS_TEAMS == 'true'
     steps:
